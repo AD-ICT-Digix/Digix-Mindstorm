@@ -66,7 +66,7 @@ while True:
     # repeating the loop while the length of the list is less than 8.
     while len(color_list) < 8:
         # Display an arrow that points to the Color Sensor.
-        brick.display.image(ImageFile.RIGHT)
+        brick.display.image(ImageFile.UP)
 
         # Display how many Color Squares have been scanned so far.
         brick.display.text(len(color_list))
