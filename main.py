@@ -2,8 +2,7 @@
 
 from pybricks import ev3brick as brick
 from pybricks.ev3devices import Motor, TouchSensor, ColorSensor
-from pybricks.parameters import (Port, Button, Color, ImageFile,
-                                 SoundFile)
+from pybricks.parameters import (Port, Button, Color, ImageFile, SoundFile)
 from pybricks.tools import wait
 
 # The Color Squares are red, green, blue, or yellow.
@@ -17,13 +16,13 @@ belt_motor = Motor(Port.D)
 # the Color Squares.
 feed_motor = Motor(Port.A)
 
+# Set up the Color Sensor.  It is used to detect the color of the Color5
+# Squares.
+color_sensor = ColorSensor(Port.S3)
+
 # Set up the Touch Sensor.  It is used to detect when the belt motor
 # has moved the sorter module all the way to the left.
 touch_sensor = TouchSensor(Port.S1)
-
-# Set up the Color Sensor.  It is used to detect the color of the Color
-# Squares.
-color_sensor = ColorSensor(Port.S3)
 
 # This is the main part of the program.  It is a loop that repeats
 # endlessly.
@@ -67,7 +66,7 @@ while True:
     # repeating the loop while the length of the list is less than 8.
     while len(color_list) < 8:
         # Display an arrow that points to the Color Sensor.
-        brick.display.image(ImageFile.RIGHT)
+        brick.display.image(ImageFile.UP)
 
         # Display how many Color Squares have been scanned so far.
         brick.display.text(len(color_list))
