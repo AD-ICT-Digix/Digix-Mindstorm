@@ -48,6 +48,8 @@ while True:
     # if the color sensor detects a color square, dispense it
     #switch sensor mode to color
     if line_sensor.color() in possible_colors:  # if color square is detected
+        brick.sound.file(SoundFile.STOP)  # stop sound
+        brick.display.image(ImageFile.STOP_1)  # stop image
         robot.stop()  # stop robot
         feed_motor.run_angle(1500, 90) # dispense color square
         feed_motor.run_angle(1500, -90) # reset feed_motor
