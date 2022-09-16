@@ -16,16 +16,17 @@ obstacle_sensor = UltrasonicSensor(Port.S2)# ultrasonic sensor for obstacle avoi
 # the obstacle_sensor is used to avoid obstacles
 # feed_motor is used to dispense the color squares
 
-POSSIBLE_COLORS = (Color.RED, Color.GREEN, Color.BLUE,Color.YELLOW)  # colors of the color squares
+possible_colors = (Color.RED, Color.GREEN, Color.BLUE,Color.YELLOW)  # colors of the color squares
 ev3.speaker.beep()  # beep to indicate program start
 
 # drive forward until the line is detected
 robot = DriveBase(motorA, motorB, wheel_diameter=55.5,axle_track=104)  # create robot object
-BLACK = 85  # black line threshold
-WHITE = 9  # white line threshold
-threshold = (BLACK + WHITE) / 2  # midpoint of black and white
-DRIVE_SPEED = 100  # speed of robot
-PROPORTIONAL_GAIN = 1.2  # proportional gain for line following
+black = 85  # black line threshold
+white = 9  # white line threshold
+threshold = (black + white) / 2  # midpoint of black and white
+turn_speed = 100  # speed of turning
+drive_speed = 100  # speed of robot
+proportional_gain = 1.2  # proportional gain for line following
 
 while True:
 while obstacle_sensor.distance() > 100:
@@ -42,13 +43,14 @@ while True:
     feed_motor.run_until_stalled(120) # initialize feed_motor
     feed_motor.run_angle(450, -180) # initialize feed_motor
     deviation = line_sensor.reflection() - threshold  # deviation from midpoint
-    turn_rate = PROPORTIONAL_GAIN * deviation  # turn rate for line following
-    robot.drive(DRIVE_SPEED, turn_rate)  # drive robot
+    turn_rate = proportional_gain * deviation  # turn rate for line following
+    robot.drive(drive_speed, turn_rate)  # drive robot
     # if the color sensor detects a color square, dispense it
-    if line_sensor.color() in POSSIBLE_COLORS:  # if color square is detected
+    #switch sensor mode to color
+    if line_sensor.color() in possible_colors:  # if color square is detected
         robot.stop()  # stop robot
         feed_motor.run_angle(1500, 90) # dispense color square
         feed_motor.run_angle(1500, -90) # reset feed_motor
         ev3.screen.print("Ejecting...")
         ev3.speaker.say("Ejecting...")
-        robot.drive(DRIVE_SPEED, turn_rate)  # continue line following
+        robot.drive(drive_speed, turn_rate)  # continue line following
