@@ -28,16 +28,14 @@ turn_speed = 100  # speed of turning
 drive_speed = 100  # speed of robot
 proportional_gain = 1.2  # proportional gain for line following
 
-while True:
-while obstacle_sensor.distance() > 100:
-robot.drive(200, 0)
-while obstacle_sensor.distance() < 100:
-robot.turn(50)
-robot.drive(20, 0)
-robot.turn(-50)
-robot.drive(20, 0)
-robot.turn(-50)
-robot.drive(20, 0)
+if obstacle_sensor.distance() < 100:  # if obstacle is detected
+   robot.stop()  # stop robot
+   ev3.speaker.beep()  # beep to indicate obstacle detected
+   robot.straight(-100)  # back up
+   robot.turn(90)  # turn 90 degrees
+   robot.straight(100)  # drive forward
+   robot.turn(-90)  # turn -90 degrees
+    robot.straight(100)  # drive forward
 
 while True:
     feed_motor.run_until_stalled(120) # initialize feed_motor
