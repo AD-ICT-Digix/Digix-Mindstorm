@@ -12,10 +12,12 @@ POSSIBLE_COLORS = (Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW)
 # the conveyor belt.
 belt_motor = Motor(Port.D)
 
-# Configure the feed motor with default settings.  This motor ejects the Color Squares.
+# Configure the feed motor with default settings.  This motor ejects
+# the Color Squares.
 feed_motor = Motor(Port.A)
 
-# Set up the Color Sensor.  It is used to detect the color of the Color Squares.
+# Set up the Color Sensor.  It is used to detect the color of the Color5
+# Squares.
 color_sensor = ColorSensor(Port.S3)
 
 # Set up the Touch Sensor.  It is used to detect when the belt motor
@@ -115,13 +117,24 @@ while True:
     # Now sort the bricks using the list of colors that have been
     # stored.  Do this by looping over each color in the list.
     for color in color_list:
+
         # Wait for 1 second between each sorting action.
         wait(1000)
-        # drop the color square when sensor sees the color
-        while color_sensor.color() != color:
-            pass
-        feed_motor.run_angle(450, 180)
-        brick.sound.beep(1000, 100, 100)
+
+        # Run the conveyor belt motor to the position that corresponds
+        # to the stored color.
+        if color == Color.BLUE:
+            brick.sound.file(SoundFile.BLUE)
+            belt_motor.run_target(500, 10)
+        elif color == Color.GREEN:
+            brick.sound.file(SoundFile.GREEN)
+            belt_motor.run_target(500, 132)
+        elif color == Color.YELLOW:
+            brick.sound.file(SoundFile.YELLOW)
+            belt_motor.run_target(500, 360)
+        elif color == Color.RED:
+            brick.sound.file(SoundFile.RED)
+            belt_motor.run_target(500, 530)
 
         # Now that the conveyor belt is in the correct position, eject
         # the colored object.
