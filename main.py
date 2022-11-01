@@ -57,6 +57,7 @@ def senseColour(offset=0):
     if average < LIGHT_TOLERANCE + offset: # If the average is less than the tolerance, the sensor is over a line
         if R > G and R > B: # If the red value is the highest, it is a red marker
             lastSeenColour = 1 # Set the last seen colour to red
+            print("Red marker detected") # Print to the console
         else: # Otherwise it is not a red marker
             print("Line is detected") # Print to the console
         return True # Return true
@@ -78,8 +79,8 @@ def mainLoop(): # Main loop that follows the line
         if lastSeenColour == 1: # If it sees a red marker, handle it
             ev3.speaker.beep(500, 1000) # Play a sound
             handleRed() # Handle the red marker
-         else: # Otherwise do nothing
-            print("No red marker detected") # Print to the console
+            print("Red has been handled") # Print to the console
+            lastSeenColour = 0 # Reset the last seen colour
         # If the ultrasonic sensor sees an object, stop the robot and turn around
         if obstacle_sensor.distance() < 100: # If the ultrasonic sensor sees an object, stop the robot and turn around
             ROBOT.stop() # Stop the robot
