@@ -23,4 +23,4 @@ The team is the group of people who are working on the product. The team is the 
 We use linear to keep track of sprints and the sprint backlog. The sprint backlog can be found here: linear.app/ad-ict
 
 ## communication channels
-We use slack to communicate with each other. The discord server can be found here: ad-ict.slack.com
+We use slack to communicate with each other. The slack server can be found here: ad-ict.slack.com
