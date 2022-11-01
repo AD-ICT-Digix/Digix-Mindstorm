@@ -1,12 +1,10 @@
 #!/usr/bin/env pybricks-micropython
 from pybricks.hubs import EV3Brick
-from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor,
-                                 InfraredSensor, UltrasonicSensor, GyroSensor)
+from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor, InfraredSensor, UltrasonicSensor, GyroSensor)
 from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
-
 ev3 = EV3Brick()
 left_motor = Motor(Port.B)  # left motor
 right_motor = Motor(Port.C)  # right motor
@@ -36,6 +34,15 @@ PROPORTIONAL_GAIN = 1.2
 # initialize the feed motor
 feed_motor.run_until_stalled(120)
 feed_motor.run_angle(450, -180)
+    
+# Initialize robot movement.
+def feedMotor():
+    robot.stop()
+    ev3.speaker.play_file(SoundFile.LASER)
+    # when sorting_machine in position , dispense a color square
+    feed_motor.run_angle(1500, 90)
+    feed_motor.run_angle(1500, -90)
+    wait(1000)
 
 # initialize the loop by pressing the center button
 while not Button.CENTER in ev3.buttons.pressed():
@@ -49,41 +56,14 @@ while True:
     # Set the drive base speed and turn rate.
     robot.drive(DRIVE_SPEED, turn_rate)
     # If the ultrasonic sensor sees an obstacle, stop the robot and beep then turn around.
-    if obstacle_sensor.distance() < 200:
+    if obstacle_sensor.distance() < 0:
         robot.stop()
         ev3.speaker.play_file(SoundFile.BACKING_ALERT)
         robot.drive_time(-100, 0, 1000)
         # turns around 180 degrees
         robot.drive_time(100, 180, 1000)
         robot.drive_time(100, 0, 1000)
+
     # if the color sensor sees a red square, stop the robot and beep then dispense a color square.
     if line_sensor.color() == Color.RED:
-        robot.stop()
-        ev3.speaker.play_file(SoundFile.LASER)
-        # when sorting_machine in position , dispense a color square
-        feed_motor.run_angle(1500, 90)
-        feed_motor.run_angle(1500, -90)
-        wait(1000)
-
-    if line_sensor.color() == Color.GREEN:
-        robot.stop()
-        ev3.speaker.play_file(SoundFile.LASER)
-        # when sorting_machine in position , dispense a color square
-        feed_motor.run_angle(1500, 90)
-        feed_motor.run_angle(1500, -90)
-        wait(1000)
-
-    if line_sensor.color() == Color.YELLOW:
-        robot.stop()
-        ev3.speaker.play_file(SoundFile.LASER)
-        # when sorting_machine in position , dispense a color square
-        feed_motor.run_angle(1500, 90)
-        feed_motor.run_angle(1500, -90)
-        wait(1000)
-        # stop the robot when center button is pressed and beep 3 times then when the button is pressed again, the robot will start again
-    if Button.CENTER in ev3.buttons.pressed():
-        robot.stop()
-        ev3.speaker.play_file(SoundFile.READY)
-        while not Button.CENTER in ev3.buttons.pressed():
-            pass
-        ev3.speaker.play_file(SoundFile.READY)
+        feedMotor()
