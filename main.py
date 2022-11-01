@@ -1,69 +1,138 @@
 #!/usr/bin/env pybricks-micropython
 from pybricks.hubs import EV3Brick
-from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor, InfraredSensor, UltrasonicSensor, GyroSensor)
+from pybricks.ev3devices import (
+    Motor, TouchSensor, ColorSensor, InfraredSensor, UltrasonicSensor, GyroSensor)
 from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile
+import time
+
+# Initalize the ev3 object
 ev3 = EV3Brick()
-left_motor = Motor(Port.B)  # left motor
-right_motor = Motor(Port.C)  # right motor
-feed_motor = Motor(Port.A)  # dispenser motor for color squares
-line_sensor = ColorSensor(Port.S3)  # color sensor for line following
-# ultrasonic sensor for obstacle avoidance
-obstacle_sensor = UltrasonicSensor(Port.S2)
 
-# Initialize the drive base.
-robot = DriveBase(left_motor, right_motor, wheel_diameter=55.5, axle_track=104)
+# Initialize the motors
+LEFT_WHEEL = Motor(Port.B)
+RIGHT_WHEEL = Motor(Port.C)
+FEED_MOTOR = Motor(Port.A)  # dispenser motor for color squares
+# Set the speed of the motors (These values are larger than they were in C because they are measured differently)
+SPEED_SLOW = -200
+SPEED_FAST = 300
+# (-80, 200) Two values that also work for SPEED_SLOW and SPEED_FAST respectively
+# Initalize the Sensors
+COLOUR_SENSOR = ColorSensor(Port.S3)
+ULTRASOUND_SENSOR = UltrasonicSensor(Port.S2)
 
-# Calculate the light threshold. Choose values based on your measurements.
-BLACK = 9
-WHITE = 85
-threshold = (BLACK + WHITE) / 2
+# The tolerance for the colour sensor to activate
+LIGHT_TOLERANCE = 22
+lastSeenColour = 0
+# 0 - Green
+# 1 - Blue
 
-# Set the drive speed at 100 millimeters per second.
-DRIVE_SPEED = 100
+# init feed motor
+FEED_MOTOR.run_until_stalled(120)
+FEED_MOTOR.run_angle(450, -180)
 
-# Set the gain of the proportional line controller. This means that for every
-# percentage point of light deviating from the threshold, we set the turn
-# rate of the drivebase to 1.2 degrees per second.
+# feed motor function.
 
-# For example, if the light value deviates from the threshold by 10, the robot
-# steers at 10*1.2 = 12 degrees per second.
-PROPORTIONAL_GAIN = 1.2
-# initialize the feed motor
-feed_motor.run_until_stalled(120)
-feed_motor.run_angle(450, -180)
-    
-# Initialize robot movement.
 def feedMotor():
-    robot.stop()
+    LEFT_WHEEL.stop()
+    RIGHT_WHEEL.stop()
     ev3.speaker.play_file(SoundFile.LASER)
     # when sorting_machine in position , dispense a color square
-    feed_motor.run_angle(1500, 90)
-    feed_motor.run_angle(1500, -90)
+    # repeat 6 times
+    for i in range(8):
+        # dispense a color square
+        FEED_MOTOR.run_until_stalled(120)
+        FEED_MOTOR.run_angle(450, -180)
+        # wait 1 second
+        time.sleep(1)
     wait(1000)
 
-# initialize the loop by pressing the center button
-while not Button.CENTER in ev3.buttons.pressed():
-    pass
-while True:
-    # Start the line following loop.
-    # Calculate the deviation from the threshold.
-    deviation = line_sensor.reflection() - threshold
-    # Calculate the turn rate.
-    turn_rate = PROPORTIONAL_GAIN * deviation
-    # Set the drive base speed and turn rate.
-    robot.drive(DRIVE_SPEED, turn_rate)
-    # If the ultrasonic sensor sees an obstacle, stop the robot and beep then turn around.
-    if obstacle_sensor.distance() < 0:
-        robot.stop()
-        ev3.speaker.play_file(SoundFile.BACKING_ALERT)
-        robot.drive_time(-100, 0, 1000)
-        # turns around 180 degrees
-        robot.drive_time(100, 180, 1000)
-        robot.drive_time(100, 0, 1000)
 
-    # if the color sensor sees a red square, stop the robot and beep then dispense a color square.
-    if line_sensor.color() == Color.RED:
-        feedMotor()
+# Returns true if the colour sensor is over a line (The variable shifts the tolerance which is necessary for precision)
+def senseColour(offset=0):
+    # Global is used to access the variable outside of the function and not define a new variable
+    global lastSeenColour
+    # Find the RGB values and the average of all 3
+    R, G, B = COLOUR_SENSOR.rgb()
+    print("R: " + str(R) + " G: " + str(G) + " B: " + str(B))
+
+    average = (R + G + B) / 3
+    # If the average is less than the tolerance, the sensor is over a line
+    if average < LIGHT_TOLERANCE + offset:
+        if R > G and R > B:
+            lastSeenColour = 1
+        return True
+    return False
+# Main loop that follows the line
+
+
+def mainLoop():
+    while True:
+        # If it sees the line, go right
+        if senseColour():
+            LEFT_WHEEL.run(SPEED_FAST)
+            RIGHT_WHEEL.run(SPEED_SLOW)
+        else:  # Otherwise go left
+            LEFT_WHEEL.run(SPEED_SLOW)
+            RIGHT_WHEEL.run(SPEED_FAST)
+        # If it sees the red line, handle it
+        if lastSeenColour == 1:
+            handleRed()
+        # If it sees an obstacle, handle it
+        if ULTRASOUND_SENSOR.distance() < 100:
+            handleObstacle()
+
+# What to do when it sees a Red marker
+
+
+def handleRed():
+    feedMotor()
+
+# What to do when it sees a GREEN obstacle
+
+
+def handleObstacle():
+    RIGHT_WHEEL.reset_angle(0)
+    # Turn right a small amount to make sure it is on the line
+    RIGHT_WHEEL.run_target(SPEED_SLOW, -55)
+
+    # Turn right until it is no longer on the line
+    while not senseColour():
+        LEFT_WHEEL.run(SPEED_SLOW / 2)
+        RIGHT_WHEEL.run(SPEED_FAST / 2)
+    # Slowly turn left until it is on the line
+    while senseColour(-2):
+        LEFT_WHEEL.run(SPEED_FAST / 2)
+        RIGHT_WHEEL.run(SPEED_SLOW / 2)
+    # Go forward until it is close to the obstacle (40mm)
+    while ULTRASOUND_SENSOR.distance() > 40:
+        LEFT_WHEEL.run(SPEED_FAST / 2)
+        RIGHT_WHEEL.run(SPEED_FAST / 2)
+    # Stop
+    LEFT_WHEEL.stop()
+    RIGHT_WHEEL.stop()
+    # Reset Encoder
+    LEFT_WHEEL.reset_angle(0)
+    # Run off to the right with the obstacle and then return
+    LEFT_WHEEL.run_target(SPEED_FAST, 360)
+    LEFT_WHEEL.run_target(SPEED_FAST, 70)
+
+
+# This is where the code truly starts
+# Make sure the motors aren't breaking and then call the line following function
+LEFT_WHEEL.stop()
+RIGHT_WHEEL.stop()
+mainLoop()
+
+# Play a sound of 500Hz for 2 seconds
+ev3.speaker.beep(500, 2000)
+# After playing a sound check the last seen colour and call the appropriate function
+if lastSeenColour == 1:
+    handleRed()
+else:
+    handleObstacle()
+
+# Go back to following the line
+mainLoop()
