@@ -24,3 +24,13 @@ We use linear to keep track of sprints and the sprint backlog. The sprint backlo
 
 ## communication channels
 We use slack to communicate with each other. The slack server can be found here: ad-ict.slack.com
+
+## How to run the project
+1. Clone the project
+2. Open the project in the mindstorm software
+3. Run the project
+
+## Functionalities
+- [x] Robot can follow line very accurately 
+- [x] Robot can drop a square block on color detection
+_ [x] Robot can sense a color and stop on it 
