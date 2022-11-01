@@ -39,7 +39,7 @@ def handleRed(): # What to do when it sees a Red marker
     print("Red is starting") # Print to the console
     LEFT_WHEEL.stop() # Stop the left wheel
     RIGHT_WHEEL.stop() # Stop the right wheel 
-    ev3.speaker.play_file(SoundFile.LASER) # Play a sound 
+    ev3.speaker.play_file(SoundFile.ACTIVATE) # Play a sound 
     for i in range(2): # For loop that runs twice
         FEED_MOTOR.run_until_stalled(120) # Run the motor until it stalls
         FEED_MOTOR.run_angle(450, -180) # Run the motor at 450 degrees per second until it returns to its original position
@@ -67,8 +67,8 @@ def senseColour(offset=0):
 
 # Main loop that follows the line
 def mainLoop(): # Main loop that follows the line
-    print("Main loop is starting") # Print to the console
     while True: # Infinite loop
+        print("Main loop is running") # Print to the console
         if senseColour(): # If it sees the line, go right
             LEFT_WHEEL.run(SPEED_FAST) # Run the left wheel at the fast speed
             RIGHT_WHEEL.run(SPEED_SLOW) # Run the right wheel at the slow speed
@@ -77,14 +77,14 @@ def mainLoop(): # Main loop that follows the line
             RIGHT_WHEEL.run(SPEED_FAST) # Run the right wheel at the fast speed
         # If it sees a red marker, handle it
         if lastSeenColour == 1: # If it sees a red marker, handle it
-            ev3.speaker.beep(500, 1000) # Play a sound
+            ev3.speaker.play_file(SoundFile.DETECTED) # Play a sound 
             handleRed() # Handle the red marker
             print("Red has been handled") # Print to the console
             lastSeenColour = 0 # Reset the last seen colour
         # If the ultrasonic sensor sees an object, stop the robot and turn around
         if obstacle_sensor.distance() < 100: # If the ultrasonic sensor sees an object, stop the robot and turn around
             ROBOT.stop() # Stop the robot
-            ev3.speaker.play_file(SoundFile.BACKING_ALERT) # Play a sound
+            ev3.speaker.play_file(SoundFile.SONAR) # Play a sound
             ROBOT.drive_time(-100, 0, 1000) # Drive backwards for 1 second
             ROBOT.drive_time(100, 180, 1000) # Turn around for 1 second
             ROBOT.drive_time(100, 0, 1000) # Drive forward for 1 second
