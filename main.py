@@ -1,12 +1,20 @@
 #!/usr/bin/env pybricks-micropython
+#   Author: N. Heutz
+#   Author: J. Reinartz 
+#   Author: D. Nellesen
+#   Author: V. Pelxer
+#   Creation Date:    Friday 9 September 2022   By: N.Heutz
+#   Last edited at    Thursday 3 November 2022    By: N.Heutz
+
+#!/usr/bin/env pybricks-micropython
 from pybricks.hubs import EV3Brick
-from pybricks.ev3devices import (
-    Motor, TouchSensor, ColorSensor, InfraredSensor, UltrasonicSensor, GyroSensor)
+from pybricks.ev3devices import (Motor, TouchSensor, ColorSensor, InfraredSensor, UltrasonicSensor, GyroSensor)
 from pybricks.parameters import Port, Stop, Direction, Button, Color
 from pybricks.tools import wait, StopWatch, DataLog
 from pybricks.robotics import DriveBase
 from pybricks.media.ev3dev import SoundFile, ImageFile, Image
 import time
+from menu import wait_for_button
 
 # Initalize the ev3 object
 ev3 = EV3Brick()
@@ -27,11 +35,9 @@ LIGHT_TOLERANCE = 22 # The tolerance for the colour sensor to activate
 # Initialize the robot drive base
 ROBOT = DriveBase(LEFT_WHEEL, RIGHT_WHEEL, wheel_diameter=55.5, axle_track=104)
 
-# init feed motor
-FEED_MOTOR.run_until_stalled(120) # run until the motor stalls
-FEED_MOTOR.run_angle(450, -180) # run the motor at 450 degrees per second until it returns to its original position
-
 def handleRed(): # What to do when it sees a Red marker
+    global turns
+    turns.append(0)
     ROBOT.stop() # Stop the robot
     print("Red is starting") # Print to the console
     ev3.speaker.play_file(SoundFile.SONAR) # Play a sound 
@@ -40,6 +46,7 @@ def handleRed(): # What to do when it sees a Red marker
         FEED_MOTOR.run_angle(450, -180) # Run the motor at 450 degrees per second until it returns to its original position
     ROBOT.drive_time(100, 0, 500) # Drive forward for 0.5 second
 
+turns = []
 # Returns true if the colour sensor is over a line (The variable shifts the tolerance which is necessary for precision)
 def senseColour(offset=0):
     R, G, B = COLOUR_SENSOR.rgb() # Get the RGB values from the colour sensor
@@ -51,6 +58,10 @@ def senseColour(offset=0):
     if average < LIGHT_TOLERANCE + offset: # If the average is less than the tolerance, the sensor is over a line
         if R > G and R > B: # If the red value is the highest, it is a red marker
             handleRed() # Handle the red marker
+            if len(turns) == 3:
+                ev3.speaker.play_file(SoundFile.CONFIRM)
+                ROBOT.stop()
+                raise SystemExit
         else: # Otherwise it is not a red marker
             print("Line is detected") # Print to the console
         return True # Return true
@@ -71,9 +82,24 @@ def mainLoop(): # Main loop that follows the line
         # If the ultrasonic sensor sees an object, stop the robot and turn around
         if ULTRASOUND_SENSOR.distance() < 100: # If the ultrasonic sensor sees an object, stop the robot and turn around
             ROBOT.stop() # Stop the robot
-            ev3.speaker.play_file(SoundFile.BACKING) # Play a sound
+            ev3.speaker.play_file(SoundFile.BACKING_ALERT) # Play a sound
             ROBOT.drive_time(-100, 0, 1000) # Drive backwards for 1 second
-            ROBOT.drive_time(100, 180, 1000) # Turn around for 1 second
-            ROBOT.drive_time(100, 0, 1000) # Drive forward for 1 second
+            ROBOT.drive_time(100, 90, 1000) # Turn around for 1 second
+            ROBOT.drive_time(100, 0, 500) # Drive forward for 1 second
+            ROBOT.drive_time(100, 90, 1000) # Turn around for 1 second
+            ROBOT.drive_time(100, 0, 500) # Drive forward for 1 second
 
-mainLoop() # Run the main loop function when the program starts running
+#The loop wich runs the menu loop. This loop keeps running while the robot is active
+while True:                                     #Start of the menu loop
+    button = wait_for_button(ev3)               #Wait define buttons
+    if button == Button.LEFT:                   #If the left button is clicked
+        ev3.speaker.beep(1000)                  #Sound with frequency 1000
+    elif button == Button.RIGHT:                #If the right button is clicked
+        ev3.speaker.beep(1000)                  #Sound with frequency 1000                
+    elif button == Button.UP:                   #Sound with frequency 120
+        ev3.speaker.beep(1000)                  #Sound with frequency 1000
+    elif button == Button.DOWN:                 #If the down button is clicked
+        ev3.speaker.beep(1000)                  #Sound with frequency 1000
+    elif button == Button.CENTER:               #If the center button is clicked
+        mainLoop() # Run the main loop function when the program starts running
+
